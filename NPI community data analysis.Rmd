@@ -1,0 +1,202 @@
+---
+title: "NPI Community Data Analysis"
+author: "Mwaura Patrick"
+date: "3/5/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm()
+library(xml2)
+library(ggplot2)
+library(rvest)
+library(curl)
+require(graphics)
+library(testthat)
+library(pillar)
+library(clipr)
+library(functional)
+library(officer)
+library(rmarkdown)
+library(conflicted)
+library(tidyr)
+library(tidyverse)
+library(dplyr)
+conflict_prefer("filter", "dplyr")
+conflict_prefer("mutate", "dplyr")
+library(readxl)
+library(here)
+library(plyr)
+conflict_prefer("summarize", "plyr")
+conflict_prefer("summarise", "dplyr")
+library(skimr)
+library(kableExtra)
+library(AMR)
+library(scales)
+library(pipeR)
+library(cleaner)
+library(htmlTable)
+library(data.table)
+library(janitor)
+conflict_prefer("chisq.test", "janitor")
+library(reshape)
+library(reshape2)
+conflict_prefer("melt", "reshape2")
+library(summarytools)
+conflict_prefer("freq", "cleaner")
+library(magrittr)
+library(epiDisplay)
+conflict_prefer("select", "dplyr")
+conflict_prefer("view", "tibble")
+library(vcdExtra)
+library(formattable)
+library(gt)
+library(flextable)
+library(huxtable)
+library(stringr)
+library(purrr)
+library(plotrix)
+#source("http://pcwww.liv.ac.uk/~william/R/crosstab.r")
+req <- substitute(require(x, character.only = TRUE))
+#libs<-c("sjPlot")
+#sapply(libs, function(x) eval(req) || {install.packages(x); eval(req)})
+conflict_prefer("rename", "dplyr")
+conflict_prefer("fmt_percent","huxtable")
+setwd("E:/RESULTS/Mwaura/mwaura/WORK1/Covid19/Dr.Peris")
+THP_R <- read_csv("THP R.csv")
+#attach(THP_R)
+```
+### Names of the variables
+
+1. Name of IK holder/THP herbalist--Name
+2. Location--Location
+3. County.--County
+4. Town /village.--Village
+5. Contact Telephone /email.--Tel
+6. email.--Email
+7. Type of herbal product(s)(liquid,powder,paste,cream etc.--Product_Nature
+8. Condition / disease managed--Condition
+9. Local community of origin&county--Origin_County
+10. Education of TPH/ IK Holder--Education_level
+11. Years of practice--Experience_Years
+12. Is the herbal product / concotion in the market. --Market_Availability
+13. Nature of immune booster--ImmuneBooster_Nature
+14. Explain the process of formulating this product --Explanation
+15. List the symptoms of COVID-19 FLU/common cold/asthma (upper respiratory disease)--Covid_19_Symptoms
+16. How it is administered.--Administration
+17. Additional notes.--Notes
+18. TK holder/THP is  clear on diagnosis/ cause of disease.--Diagnosis_Clarity_1
+19. comments--Comments
+20. TK provider has provided specific regimen for immune booster /FLU/COVID -19--ImmuneBooster_Specific_Regimen_2
+21. will TK provider willing to provide specific immune booster / FLU/COVID -19--ImmuneBooster_Provision_3
+22. IK provider has patient follow up mechanism.--Patient_Followup_4 
+23. Provider has records system for patients.--Patient_Records_5
+24. Provider has packaging mechanism /action plans.--Product_Packaging_6
+25. Has product been properly labeled--Product_Labeling_7
+26. What is the stability of the product?How long can you store product--Storage_Length_8
+27. Provider / IK holder /THP has known continuous source of medicinal plants--Consistent_Source_9
+28. Provider/IK holder /THP is a member to an association/ society/Group--Association_Membership_10
+29. Provider is aware of intellectual property  (IP) processes (registered with relevant government 32. departments)--IP_Process_Awareness_11
+30. Is TK Holder  aware of where and how they can protect their knowledge--Knowledge_Protection_Awareness_12
+31. Provider has started the process/ patented the products.--Product_Patent_13
+32. Date.--Date
+```{r}
+
+```
+### 1. Characterize the IK Holders 
+
+THPS  SCETION 
+1 Background information
+AGE,  GENDER , EDUCATION ,RESIDENCE
+
+section 3 Product  8, 9  & 10
+
+Gender and Age were not captured in the questionnaire
+```{r,echo=FALSE,warning=FALSE}
+THP_R %>% tabyl(Education_Level) %>%  dplyr::arrange(desc(n)) %>% adorn_pct_formatting(digits = 2) %>% flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all")%>% add_header_lines("Proportion with Respect to level of Eduction")
+
+THP_R  %>%  ggplot( aes(x=Education_Level)) +geom_bar() +coord_flip()+scale_fill_manual(values = c("#e5f5e0", "#a1d99b", "#31a354")) +theme_minimal() + ggtitle("Fig. A: Proportion with Respect to level of Eduction")+theme(plot.title = element_text(size = 13, face = "bold"))
+
+
+THP_R %>%group_by(Education_Level) %>%summarise_at(vars(Storage_Length_8), funs(mean(., na.rm=TRUE))) %>% mutate(Storage_Length_8,"Months"=round(Storage_Length_8*12)) %>% dplyr::arrange(desc(Storage_Length_8)) %>% select(-Storage_Length_8)%>% flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>% add_header_lines("Avarage Length of Storage in Months by Level of Education")
+
+THP_R %>%group_by(Education_Level) %>%summarise_at(vars(Experience_Years), funs(mean(., na.rm=TRUE)))%>% mutate(Experience_Years,"Experience_Years"=round(Experience_Years)) %>%   dplyr::arrange(desc(Experience_Years))%>% flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>% add_header_lines("Most Experienced by level of Education")
+
+
+THP_R %>%group_by(Education_Level) %>%summarise_at(vars(Storage_Length_8), funs(mean(., na.rm=TRUE))) %>% mutate(Storage_Length_8,"Months"=round(Storage_Length_8*12)) %>% dplyr::arrange(desc(Storage_Length_8)) %>% select(-Storage_Length_8) %>% ggplot( aes(x=Months, y=Education_Level))+geom_bar(stat="identity")+ ggtitle("Fig. B: Level of Education against the average storage time length in Months")+theme(plot.title = element_text(size = 10, face = "bold"))
+
+ggplot(data=THP_R, aes(y =Experience_Years)) +  geom_boxplot(color="blue", fill="green", alpha=0.2)+ggtitle("Fig. D: Distribution of years of experience")+theme(plot.title = element_text(size = 10, face = "bold"))+scale_fill_brewer(palette="blue")+ theme(legend.position = "none")
+
+
+THP_R %>% tabyl(Education_Level,Association_Membership_10, sort = TRUE) %>% adorn_totals(c("row","col")) %>%  adorn_percentages("col") %>%adorn_pct_formatting(digits = 2) %>%adorn_ns() %>%  flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>% add_header_lines("Membership Association by Level of Education")
+
+ggplot(data=THP_R, aes(x = Education_Level, y =Experience_Years,color=Education_Level )) +  geom_boxplot()+ coord_flip()+ggtitle("Fig. C: Boxplots showing the distribution of number of" ,"years of experience with the level of Education")+theme(plot.title = element_text(size = 10, face = "bold"))+ theme(legend.position = "none")
+
+
+THP_R %>% tabyl(County,show_na= FALSE, sort = TRUE) %>%adorn_pct_formatting() %>%  flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Count by County of Practice")
+
+THP_R %>% tabyl(Origin_County,show_na= FALSE, sort = TRUE) %>%adorn_pct_formatting() %>%  flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Count by County of Origin")
+
+
+
+
+
+
+```
+### 2. Characterize the products
+
+Type form or evaluate their products
+
+section 1: Background
+            -Type of product,
+             -Is it in markets
+
+```{r,echo=FALSE}
+THP_R %>% mutate(Product_Nature = strsplit(as.character(Product_Nature), ",")) %>% unnest(Product_Nature) %>% tabyl(Product_Nature,show_na=FALSE)%>%adorn_pct_formatting() %>%  flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Nature of the Product")
+
+pie<-THP_R %>% mutate(Product_Nature = strsplit(as.character(Product_Nature), ",")) %>% unnest(Product_Nature) %>%tabyl(Product_Nature,show_na=FALSE) %>% select(Product_Nature,n) 
+pct <- round(pie[[2]]/sum(pie[[2]])*100)
+pie3D(pie[[2]],labels=paste(pie[[1]],sep="", pct,"%"),explode=0.1,main="Nature of the Products")
+
+THP_R %>% tabyl(Market_Availability,show_na=FALSE)%>%adorn_pct_formatting() %>%  flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Product availability in the Market")
+
+piem<-THP_R %>% tabyl(Market_Availability,show_na=FALSE) %>% select(Market_Availability,n)
+pctm <- round(piem[[2]]/sum(piem[[2]])*100)
+pie3D(piem[[2]],labels=paste(piem[[1]],sep="", pctm,"%"),explode=0.1,main="Products Market Availability")
+
+```
+### Section 2: Processing  (though  poorly answered)
+### Section 3:  Product:  6, 7,9
+-Packaging
+-labeling
+-Sourcing sustainability/conservation
+```{r,echo=FALSE}
+
+#%>%  flextable() %>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Product Labelling")
+P<-THP_R %>% tabyl(Product_Packaging_6) %>%adorn_pct_formatting() %>% select(n,percent)
+
+L<-THP_R %>% tabyl(Product_Labeling_7) %>%adorn_pct_formatting()%>% select(n,percent)
+
+S<-THP_R %>% tabyl(Consistent_Source_9) %>%adorn_pct_formatting()%>% select(n,percent)
+
+Response<-c("No","Yes")
+A<-cbind(Response,P,L,S)
+
+colnames(A)<-c("Response","Count.P" ,"Percent.P","Count.L" ,"Percent.L","Count.S" ,"Percent.S")
+A%>%  flextable()%>%add_header_row(values=c("","Product Packaging","Product Labeling","Consistent Source"),colwidths =c(1,2,2,2) )%>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Product Packaging, Labeling, Sourcing")
+```
+
+### 3. Describe the healthcare system  section 3:  Product; 1, 2  3&4
+-Diagnosis
+-Regimen
+-Followup
+```{r,echo=FALSE}
+THP_R %>% tabyl(Diagnosis_Clarity_1) %>% adorn_pct_formatting() %>% flextable()%>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Clarity in Diagonising a Condation")
+
+THP_R %>% tabyl(Immunebooster_Specific_Regimen_2)%>% adorn_pct_formatting() %>% flextable()%>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Regimen for Boosting Immunity")
+ 
+THP_R %>% tabyl(Patient_Followup_4)%>% adorn_pct_formatting() %>% flextable()%>% theme_zebra()%>% border(border=fp_border(color = "black"),part = "all")%>% border(part = "all") %>%add_header_lines("Patient Followup")
+
+```
+
